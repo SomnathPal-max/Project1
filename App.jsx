@@ -1,62 +1,32 @@
-import { useState, useEffect } from 'react';
-import { getTasks, createTask, updateTask, deleteTask } from './api'; // Import createTask
-import TaskList from './components/TaskList';
-import AddTaskForm from './components/AddTaskForm'; // Import the new component
-import './App.css';
+import FilterBar from './components/FilterBar'; // Import the new component
 
-function App() {
+// ... inside App function ...
   const [tasks, setTasks] = useState([]);
-  const [isFormVisible, setIsFormVisible] = useState(false); // State to toggle form
+  const [filter, setFilter] = useState('all'); // State for filter
+  const [isFormVisible, setIsFormVisible] = useState(false);
 
+  // Re-fetch tasks whenever the 'filter' state changes
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [filter]); 
 
   const fetchTasks = async () => {
     try {
-      const { data } = await getTasks();
+      // If filter is 'all', don't send a query param. Otherwise send ?status=...
+      const query = filter === 'all' ? '' : `?status=${filter}`;
+      const { data } = await api.get(`/tasks${query}`); // Using the api instance directly here
       setTasks(data);
     } catch (error) {
       console.error('Error fetching tasks:', error);
     }
   };
 
-  // NEW: Handle Adding a Task
-  const handleAddTask = async (newTaskData) => {
-    try {
-      const { data } = await createTask(newTaskData);
-      setTasks([data, ...tasks]); // Add new task to the top of the list
-      setIsFormVisible(false); // Close form
-    } catch (error) {
-      console.error('Error adding task:', error);
-    }
-  };
-
-  // ... (handleToggle and handleDelete remain the same as before) ...
-  const handleToggle = async (id, status) => {
-    try {
-      const { data } = await updateTask(id, { completed: status });
-      setTasks(tasks.map(task => task._id === id ? data : task));
-    } catch (error) {
-      console.error('Error updating task:', error);
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure?')) return;
-    try {
-      await deleteTask(id);
-      setTasks(tasks.filter(task => task._id !== id));
-    } catch (error) {
-      console.error('Error deleting task:', error);
-    }
-  };
+  // ... handleAddTask, handleToggle, handleDelete remain the same ...
 
   return (
     <div className="app-container">
       <header className="app-header">
         <h1>Task Manager</h1>
-        {/* Toggle button changes based on visibility */}
         <button 
           className="add-btn" 
           onClick={() => setIsFormVisible(!isFormVisible)}
@@ -66,13 +36,17 @@ function App() {
       </header>
       
       <main>
-        {/* Conditionally render the form */}
         {isFormVisible && (
           <AddTaskForm 
             onAdd={handleAddTask} 
             onCancel={() => setIsFormVisible(false)} 
           />
         )}
+
+        {/* Add FilterBar above the list */}
+        <div className="controls">
+          <FilterBar currentFilter={filter} onFilterChange={setFilter} />
+        </div>
 
         <TaskList 
           tasks={tasks} 
@@ -82,6 +56,3 @@ function App() {
       </main>
     </div>
   );
-}
-
-export default App;

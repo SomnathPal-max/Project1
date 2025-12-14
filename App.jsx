@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { getTasks, updateTask, deleteTask } from './api';
+import { getTasks, createTask, updateTask, deleteTask } from './api'; // Import createTask
 import TaskList from './components/TaskList';
-import './App.css'; // We will add styles next
+import AddTaskForm from './components/AddTaskForm'; // Import the new component
+import './App.css';
 
 function App() {
   const [tasks, setTasks] = useState([]);
+  const [isFormVisible, setIsFormVisible] = useState(false); // State to toggle form
 
-  // Fetch tasks on initial load
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -20,24 +21,31 @@ function App() {
     }
   };
 
-  // Handle toggling complete/incomplete
+  // NEW: Handle Adding a Task
+  const handleAddTask = async (newTaskData) => {
+    try {
+      const { data } = await createTask(newTaskData);
+      setTasks([data, ...tasks]); // Add new task to the top of the list
+      setIsFormVisible(false); // Close form
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
+  };
+
+  // ... (handleToggle and handleDelete remain the same as before) ...
   const handleToggle = async (id, status) => {
     try {
       const { data } = await updateTask(id, { completed: status });
-      // Update UI immediately by mapping through state
       setTasks(tasks.map(task => task._id === id ? data : task));
     } catch (error) {
       console.error('Error updating task:', error);
     }
   };
 
-  // Handle deleting a task
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure?')) return;
-    
     try {
       await deleteTask(id);
-      // Remove from UI
       setTasks(tasks.filter(task => task._id !== id));
     } catch (error) {
       console.error('Error deleting task:', error);
@@ -48,10 +56,24 @@ function App() {
     <div className="app-container">
       <header className="app-header">
         <h1>Task Manager</h1>
-        {/* We will add the "Add Task" button here in the next step */}
+        {/* Toggle button changes based on visibility */}
+        <button 
+          className="add-btn" 
+          onClick={() => setIsFormVisible(!isFormVisible)}
+        >
+          {isFormVisible ? 'Close' : '+ Add Task'}
+        </button>
       </header>
       
       <main>
+        {/* Conditionally render the form */}
+        {isFormVisible && (
+          <AddTaskForm 
+            onAdd={handleAddTask} 
+            onCancel={() => setIsFormVisible(false)} 
+          />
+        )}
+
         <TaskList 
           tasks={tasks} 
           onToggle={handleToggle} 

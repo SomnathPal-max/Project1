@@ -1,0 +1,11 @@
+// ... existing imports ...
+
+// Import Routes
+const taskRoutes = require('./routes/taskRoutes'); // Add this
+
+// ... existing middleware ...
+
+// Use Routes
+app.use('/api/tasks', taskRoutes); // Add this
+
+// ... app.listen ...

@@ -1,0 +1,29 @@
+const mongoose = require('mongoose');
+
+const TaskSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true, // Title is essential [cite: 15]
+    trim: true
+  },
+  description: {
+    type: String, // [cite: 34]
+    trim: true
+  },
+  dueDate: {
+    type: Date // [cite: 35]
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'], // Restricted to these values [cite: 37]
+    default: 'medium'
+  },
+  completed: {
+    type: Boolean,
+    default: false // Defaults to uncomplete [cite: 17, 38]
+  }
+}, {
+  timestamps: true // Automatically adds createdAt and updatedAt [cite: 39]
+});
+
+module.exports = mongoose.model('Task', TaskSchema);
